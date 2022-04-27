@@ -178,15 +178,6 @@ func performTemplating(input string, p *PopulateStringInput) (string, error) {
 		case strings.HasPrefix(trimmed, "metadata."):
 			split := strings.SplitN(trimmed, ".", 2)
 			return p.templateHandler(alias.Metadata, split[1])
-
-		case trimmed == "custom_metadata":
-			return p.templateHandler(alias.CustomMetadata)
-
-		case strings.HasPrefix(trimmed, "custom_metadata."):
-
-			split := strings.SplitN(trimmed, ".", 2)
-			return p.templateHandler(alias.CustomMetadata, split[1])
-
 		}
 
 		return "", ErrTemplateValueNotFound
@@ -231,7 +222,7 @@ func performTemplating(input string, p *PopulateStringInput) (string, error) {
 				}
 
 				// An empty alias is sufficient for generating defaults
-				alias = &logical.Alias{Metadata: make(map[string]string), CustomMetadata: make(map[string]string)}
+				alias = &logical.Alias{Metadata: make(map[string]string)}
 			}
 			return performAliasTemplating(split[1], alias)
 		}

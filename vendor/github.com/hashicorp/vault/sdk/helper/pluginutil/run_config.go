@@ -9,20 +9,8 @@ import (
 
 	log "github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/vault/sdk/helper/consts"
 	"github.com/hashicorp/vault/sdk/version"
 )
-
-type PluginClientConfig struct {
-	Name            string
-	PluginType      consts.PluginType
-	PluginSets      map[int]plugin.PluginSet
-	HandshakeConfig plugin.HandshakeConfig
-	Logger          log.Logger
-	IsMetadataMode  bool
-	AutoMTLS        bool
-	MLock           bool
-}
 
 type runConfig struct {
 	// Provided by PluginRunner
@@ -33,9 +21,12 @@ type runConfig struct {
 	// Initialized with what's in PluginRunner.Env, but can be added to
 	env []string
 
-	wrapper RunnerUtil
-
-	PluginClientConfig
+	wrapper        RunnerUtil
+	pluginSets     map[int]plugin.PluginSet
+	hs             plugin.HandshakeConfig
+	logger         log.Logger
+	isMetadataMode bool
+	autoMTLS       bool
 }
 
 func (rc runConfig) makeConfig(ctx context.Context) (*plugin.ClientConfig, error) {
@@ -43,19 +34,19 @@ func (rc runConfig) makeConfig(ctx context.Context) (*plugin.ClientConfig, error
 	cmd.Env = append(cmd.Env, rc.env...)
 
 	// Add the mlock setting to the ENV of the plugin
-	if rc.MLock || (rc.wrapper != nil && rc.wrapper.MlockEnabled()) {
+	if rc.wrapper != nil && rc.wrapper.MlockEnabled() {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", PluginMlockEnabled, "true"))
 	}
 	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", PluginVaultVersionEnv, version.GetVersion().Version))
 
-	if rc.IsMetadataMode {
-		rc.Logger = rc.Logger.With("metadata", "true")
+	if rc.isMetadataMode {
+		rc.logger = rc.logger.With("metadata", "true")
 	}
-	metadataEnv := fmt.Sprintf("%s=%t", PluginMetadataModeEnv, rc.IsMetadataMode)
+	metadataEnv := fmt.Sprintf("%s=%t", PluginMetadataModeEnv, rc.isMetadataMode)
 	cmd.Env = append(cmd.Env, metadataEnv)
 
 	var clientTLSConfig *tls.Config
-	if !rc.AutoMTLS && !rc.IsMetadataMode {
+	if !rc.autoMTLS && !rc.isMetadataMode {
 		// Get a CA TLS Certificate
 		certBytes, key, err := generateCert()
 		if err != nil {
@@ -85,17 +76,17 @@ func (rc runConfig) makeConfig(ctx context.Context) (*plugin.ClientConfig, error
 	}
 
 	clientConfig := &plugin.ClientConfig{
-		HandshakeConfig:  rc.HandshakeConfig,
-		VersionedPlugins: rc.PluginSets,
+		HandshakeConfig:  rc.hs,
+		VersionedPlugins: rc.pluginSets,
 		Cmd:              cmd,
 		SecureConfig:     secureConfig,
 		TLSConfig:        clientTLSConfig,
-		Logger:           rc.Logger,
+		Logger:           rc.logger,
 		AllowedProtocols: []plugin.Protocol{
 			plugin.ProtocolNetRPC,
 			plugin.ProtocolGRPC,
 		},
-		AutoMTLS: rc.AutoMTLS,
+		AutoMTLS: rc.autoMTLS,
 	}
 	return clientConfig, nil
 }
@@ -126,37 +117,31 @@ func Runner(wrapper RunnerUtil) RunOpt {
 
 func PluginSets(pluginSets map[int]plugin.PluginSet) RunOpt {
 	return func(rc *runConfig) {
-		rc.PluginSets = pluginSets
+		rc.pluginSets = pluginSets
 	}
 }
 
 func HandshakeConfig(hs plugin.HandshakeConfig) RunOpt {
 	return func(rc *runConfig) {
-		rc.HandshakeConfig = hs
+		rc.hs = hs
 	}
 }
 
 func Logger(logger log.Logger) RunOpt {
 	return func(rc *runConfig) {
-		rc.Logger = logger
+		rc.logger = logger
 	}
 }
 
 func MetadataMode(isMetadataMode bool) RunOpt {
 	return func(rc *runConfig) {
-		rc.IsMetadataMode = isMetadataMode
+		rc.isMetadataMode = isMetadataMode
 	}
 }
 
 func AutoMTLS(autoMTLS bool) RunOpt {
 	return func(rc *runConfig) {
-		rc.AutoMTLS = autoMTLS
-	}
-}
-
-func MLock(mlock bool) RunOpt {
-	return func(rc *runConfig) {
-		rc.MLock = mlock
+		rc.autoMTLS = autoMTLS
 	}
 }
 

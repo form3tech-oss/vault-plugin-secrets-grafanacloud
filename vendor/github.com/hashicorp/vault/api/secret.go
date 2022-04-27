@@ -7,9 +7,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/go-secure-stdlib/parseutil"
 	"github.com/hashicorp/vault/sdk/helper/jsonutil"
-	"github.com/hashicorp/vault/sdk/logical"
+	"github.com/hashicorp/vault/sdk/helper/parseutil"
 )
 
 // Secret is the structure returned for every secret within Vault.
@@ -298,8 +297,6 @@ type SecretAuth struct {
 
 	LeaseDuration int  `json:"lease_duration"`
 	Renewable     bool `json:"renewable"`
-
-	MFARequirement *logical.MFARequirement `json:"mfa_requirement"`
 }
 
 // ParseSecret is used to parse a secret value from JSON from an io.Reader.

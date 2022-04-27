@@ -22,8 +22,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/hashicorp/go-hclog"
-	"google.golang.org/grpc"
+	hclog "github.com/hashicorp/go-hclog"
 )
 
 // If this is 1, then we've called CleanupClients. This can be used
@@ -160,8 +159,11 @@ type ClientConfig struct {
 
 	// SyncStdout, SyncStderr can be set to override the
 	// respective os.Std* values in the plugin. Care should be taken to
-	// avoid races here. If these are nil, then this will be set to
-	// ioutil.Discard.
+	// avoid races here. If these are nil, then this will automatically be
+	// hooked up to os.Stdin, Stdout, and Stderr, respectively.
+	//
+	// If the default values (nil) are used, then this package will not
+	// sync any of these streams.
 	SyncStdout io.Writer
 	SyncStderr io.Writer
 
@@ -204,27 +206,15 @@ type ClientConfig struct {
 	//
 	// You cannot Reattach to a server with this option enabled.
 	AutoMTLS bool
-
-	// GRPCDialOptions allows plugin users to pass custom grpc.DialOption
-	// to create gRPC connections. This only affects plugins using the gRPC
-	// protocol.
-	GRPCDialOptions []grpc.DialOption
 }
 
 // ReattachConfig is used to configure a client to reattach to an
 // already-running plugin process. You can retrieve this information by
 // calling ReattachConfig on Client.
 type ReattachConfig struct {
-	Protocol        Protocol
-	ProtocolVersion int
-	Addr            net.Addr
-	Pid             int
-
-	// Test is set to true if this is reattaching to to a plugin in "test mode"
-	// (see ServeConfig.Test). In this mode, client.Kill will NOT kill the
-	// process and instead will rely on the plugin to terminate itself. This
-	// should not be used in non-test environments.
-	Test bool
+	Protocol Protocol
+	Addr     net.Addr
+	Pid      int
 }
 
 // SecureConfig is used to configure a client to verify the integrity of an
@@ -700,14 +690,14 @@ func (c *Client) Start() (addr net.Addr, err error) {
 
 		// Check the core protocol. Wrapped in a {} for scoping.
 		{
-			var coreProtocol int
-			coreProtocol, err = strconv.Atoi(parts[0])
+			var coreProtocol int64
+			coreProtocol, err = strconv.ParseInt(parts[0], 10, 0)
 			if err != nil {
 				err = fmt.Errorf("Error parsing core protocol version: %s", err)
 				return
 			}
 
-			if coreProtocol != CoreProtocolVersion {
+			if int(coreProtocol) != CoreProtocolVersion {
 				err = fmt.Errorf("Incompatible core API version with plugin. "+
 					"Plugin version: %s, Core version: %d\n\n"+
 					"To fix this, the plugin usually only needs to be recompiled.\n"+
@@ -798,10 +788,7 @@ func (c *Client) reattach() (net.Addr, error) {
 	// Verify the process still exists. If not, then it is an error
 	p, err := os.FindProcess(c.config.Reattach.Pid)
 	if err != nil {
-		// On Unix systems, FindProcess never returns an error.
-		// On Windows, for non-existent pids it returns:
-		// os.SyscallError - 'OpenProcess: the paremter is incorrect'
-		return nil, ErrProcessNotFound
+		return nil, err
 	}
 
 	// Attempt to connect to the addr since on Unix systems FindProcess
@@ -838,23 +825,13 @@ func (c *Client) reattach() (net.Addr, error) {
 		c.exited = true
 	}(p.Pid)
 
-	// Set the address and protocol
+	// Set the address and process
 	c.address = c.config.Reattach.Addr
+	c.process = p
 	c.protocol = c.config.Reattach.Protocol
 	if c.protocol == "" {
 		// Default the protocol to net/rpc for backwards compatibility
 		c.protocol = ProtocolNetRPC
-	}
-
-	if c.config.Reattach.Test {
-		c.negotiatedVersion = c.config.Reattach.ProtocolVersion
-	}
-
-	// If we're in test mode, we do NOT set the process. This avoids the
-	// process being killed (the only purpose we have for c.process), since
-	// in test mode the process is responsible for exiting on its own.
-	if !c.config.Reattach.Test {
-		c.process = p
 	}
 
 	return c.address, nil

@@ -15,8 +15,6 @@ import (
 var ErrServerInMetadataMode = errors.New("plugin server can not perform action while in metadata mode")
 
 type backendGRPCPluginServer struct {
-	pb.UnimplementedBackendServer
-
 	broker  *plugin.GRPCBroker
 	backend logical.Backend
 
