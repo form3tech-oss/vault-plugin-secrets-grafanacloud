@@ -85,7 +85,7 @@ func (e *testEnv) AddConfig(t *testing.T) {
 func (e *testEnv) AddUserTokenRole(t *testing.T) {
 	req := &logical.Request{
 		Operation: logical.UpdateOperation,
-		Path:      "role/test-user-token",
+		Path:      "roles/test-user-token",
 		Storage:   e.Storage,
 		Data: map[string]interface{}{
 			"gc_role": "Viewer",

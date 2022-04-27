@@ -56,7 +56,7 @@ func (r *grafanaCloudRoleEntry) toResponseData() map[string]interface{} {
 func pathRole(b *grafanaCloudBackend) []*framework.Path {
 	return []*framework.Path{
 		{
-			Pattern: "role/" + framework.GenericNameRegex("name"),
+			Pattern: "roles/" + framework.GenericNameRegex("name"),
 			Fields: map[string]*framework.FieldSchema{
 				"name": {
 					Type:        framework.TypeString,
@@ -95,7 +95,7 @@ func pathRole(b *grafanaCloudBackend) []*framework.Path {
 			HelpDescription: pathRoleHelpDescription,
 		},
 		{
-			Pattern: "role/?$",
+			Pattern: "roles/?$",
 			Operations: map[logical.Operation]framework.OperationHandler{
 				logical.ListOperation: &framework.PathOperation{
 					Callback: b.pathRolesList,
@@ -112,7 +112,7 @@ func (b *grafanaCloudBackend) getRole(ctx context.Context, s logical.Storage, na
 		return nil, fmt.Errorf("missing role name")
 	}
 
-	entry, err := s.Get(ctx, "role/"+name)
+	entry, err := s.Get(ctx, "roles/"+name)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func (b *grafanaCloudBackend) pathRolesRead(ctx context.Context, req *logical.Re
 }
 
 func setRole(ctx context.Context, s logical.Storage, name string, roleEntry *grafanaCloudRoleEntry) error {
-	entry, err := logical.StorageEntryJSON("role/"+name, roleEntry)
+	entry, err := logical.StorageEntryJSON("roles/"+name, roleEntry)
 	if err != nil {
 		return err
 	}
@@ -214,7 +214,7 @@ func (b *grafanaCloudBackend) pathRolesWrite(ctx context.Context, req *logical.R
 }
 
 func (b *grafanaCloudBackend) pathRolesDelete(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	err := req.Storage.Delete(ctx, "role/"+d.Get("name").(string))
+	err := req.Storage.Delete(ctx, "roles/"+d.Get("name").(string))
 	if err != nil {
 		return nil, fmt.Errorf("error deleting grafanaCloud role: %w", err)
 	}
@@ -223,7 +223,7 @@ func (b *grafanaCloudBackend) pathRolesDelete(ctx context.Context, req *logical.
 }
 
 func (b *grafanaCloudBackend) pathRolesList(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	entries, err := req.Storage.List(ctx, "role/")
+	entries, err := req.Storage.List(ctx, "roles/")
 	if err != nil {
 		return nil, err
 	}

@@ -23,7 +23,7 @@ func TestAccUserToken(t *testing.T) {
 	envOptions := &stepwise.MountOptions{
 		RegistryName:    "grafana",
 		PluginType:      stepwise.PluginTypeSecrets,
-		PluginName:      "vault-plugin-secrets-grafana-cloud",
+		PluginName:      "vault-plugin-secrets-grafanacloud",
 		MountPathPrefix: "grafana",
 	}
 
@@ -74,7 +74,7 @@ func testAccConfig(t *testing.T) stepwise.Step {
 func testAccUserRole(t *testing.T, roleName string) stepwise.Step {
 	return stepwise.Step{
 		Operation: stepwise.UpdateOperation,
-		Path:      "role/" + roleName,
+		Path:      "roles/" + roleName,
 		Data: map[string]interface{}{
 			"gc_role": "Viewer",
 			"ttl":     "1m",
@@ -91,7 +91,7 @@ func testAccUserRole(t *testing.T, roleName string) stepwise.Step {
 func testAccUserRoleRead(t *testing.T, roleName string) stepwise.Step {
 	return stepwise.Step{
 		Operation: stepwise.ReadOperation,
-		Path:      "role/" + roleName,
+		Path:      "roles/" + roleName,
 		Assert: func(resp *api.Secret, err error) error {
 			require.NotNil(t, resp)
 			require.Equal(t, "Viewer", resp.Data["gc_role"])

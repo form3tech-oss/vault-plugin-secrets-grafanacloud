@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/hashicorp/vault/sdk/framework"
 
+	"github.com/form3tech-oss/vault-plugin-secrets-grafanacloud/client"
 	uuid "github.com/google/uuid"
 	"github.com/hashicorp/vault/sdk/logical"
-	"github.com/samo-f3/vault-plugin-secrets-grafana-cloud/client"
 )
 
 type GrafanaCloudKey struct {

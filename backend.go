@@ -5,9 +5,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/form3tech-oss/vault-plugin-secrets-grafanacloud/client"
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
-	"github.com/samo-f3/vault-plugin-secrets-grafana-cloud/client"
 )
 
 const grafanaCloudKeyType = "GrafanaCloudKey"
@@ -44,7 +44,7 @@ func backend() *grafanaCloudBackend {
 			LocalStorage: []string{},
 			SealWrapStorage: []string{
 				"config",
-				"role/*",
+				"roles/*",
 			},
 		},
 		Paths: framework.PathAppend(

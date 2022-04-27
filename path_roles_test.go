@@ -2,10 +2,11 @@ package secretsengine
 
 import (
 	"context"
-	"github.com/hashicorp/vault/sdk/logical"
-	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
+
+	"github.com/hashicorp/vault/sdk/logical"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -158,7 +159,7 @@ func testTokenRoleCreate(t *testing.T, b *grafanaCloudBackend, s logical.Storage
 	t.Helper()
 	resp, err := b.HandleRequest(context.Background(), &logical.Request{
 		Operation: logical.CreateOperation,
-		Path:      "role/" + roleName,
+		Path:      "roles/" + roleName,
 		Data:      d,
 		Storage:   s,
 	})
@@ -175,7 +176,7 @@ func testTokenRoleUpdate(t *testing.T, b *grafanaCloudBackend, s logical.Storage
 	t.Helper()
 	resp, err := b.HandleRequest(context.Background(), &logical.Request{
 		Operation: logical.UpdateOperation,
-		Path:      "role/" + roleName,
+		Path:      "roles/" + roleName,
 		Data:      d,
 		Storage:   s,
 	})
@@ -196,7 +197,7 @@ func testTokenRoleRead(t *testing.T, b *grafanaCloudBackend, s logical.Storage, 
 
 	return b.HandleRequest(context.Background(), &logical.Request{
 		Operation: logical.ReadOperation,
-		Path:      "role/" + vRole,
+		Path:      "roles/" + vRole,
 		Storage:   s,
 	})
 }
@@ -206,7 +207,7 @@ func testTokenRoleList(t *testing.T, b *grafanaCloudBackend, s logical.Storage) 
 	t.Helper()
 	return b.HandleRequest(context.Background(), &logical.Request{
 		Operation: logical.ListOperation,
-		Path:      "role/",
+		Path:      "roles/",
 		Storage:   s,
 	})
 }
@@ -216,7 +217,7 @@ func testTokenRoleDelete(t *testing.T, b *grafanaCloudBackend, s logical.Storage
 	t.Helper()
 	return b.HandleRequest(context.Background(), &logical.Request{
 		Operation: logical.DeleteOperation,
-		Path:      "role/" + vaultRole,
+		Path:      "roles/" + vaultRole,
 		Storage:   s,
 	})
 }
