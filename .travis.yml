@@ -12,8 +12,6 @@ services:
   - docker
 install:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow --tags; fi
-before_script:
-  - make pull-dependencies
 jobs:
   include:
     - stage: test
