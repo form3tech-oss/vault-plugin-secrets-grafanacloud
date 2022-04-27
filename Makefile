@@ -3,6 +3,7 @@
 platform := $(shell uname)
 
 GOFMT_FILES?=$$(find ./ -name '*.go' | grep -v vendor)
+DOCKER_IMG ?= form3tech/vault-plugin-secrets-grafanacloud)
 
 default: build test
 
