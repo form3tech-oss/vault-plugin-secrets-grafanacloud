@@ -182,7 +182,7 @@ func (b *grafanaCloudBackend) pathRolesWrite(ctx context.Context, req *logical.R
 	if gcRole, ok := d.GetOk("gc_role"); ok {
 		roleEntry.GrafanaCloudRole = gcRole.(string)
 		if _, ok := grafanaCloudValidRoles[roleEntry.GrafanaCloudRole]; !ok {
-			return logical.ErrorResponse("provided gc_role vaultRole is not valid"), nil
+			return logical.ErrorResponse(fmt.Sprintf("provided gc_role %s is not valid", roleEntry.GrafanaCloudRole)), nil
 		}
 	} else if !ok && createOperation {
 		return nil, fmt.Errorf("missing gc_role value")
