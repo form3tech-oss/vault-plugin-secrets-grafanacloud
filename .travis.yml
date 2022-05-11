@@ -17,7 +17,7 @@ jobs:
     - stage: test
       name: Go Test
       script:
-        - make test
+        - make test docker-build
 deploy:
   - provider: script
     skip_cleanup: true

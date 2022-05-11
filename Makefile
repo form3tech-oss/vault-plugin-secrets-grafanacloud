@@ -3,7 +3,7 @@
 platform := $(shell uname)
 
 GOFMT_FILES?=$$(find ./ -name '*.go' | grep -v vendor)
-DOCKER_IMG ?= form3tech/vault-plugin-secrets-grafanacloud)
+DOCKER_IMG ?= form3tech/vault-plugin-secrets-grafanacloud
 
 default: build test
 
@@ -57,5 +57,14 @@ lint:
 		exit 1; \
 	fi
 
+docker-build:
+	@echo "==> Building docker image..."
+	docker build -f build/package/vault-plugin-secrets-grafanacloud/Dockerfile -t $(DOCKER_IMG):$(TRAVIS_TAG) .
 
-.PHONY: build test vet goimports errcheck lint vendor-status default docker-compose generate
+publish: docker-build
+	@echo "==> Logging in to the docker registry..."
+	echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
+	@echo "==> Pushing built image..."
+	docker push $(DOCKER_IMG):$(TRAVIS_TAG)
+
+.PHONY: build test vet goimports errcheck lint vendor-status default generate publish docker-build
