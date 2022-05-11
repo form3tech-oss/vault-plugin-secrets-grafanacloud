@@ -45,8 +45,7 @@ install-vault:
 	@rm vault_1.0.3_darwin_amd64.zip
 
 generate:
-	@go get github.com/golang/mock/gomock
-	@go install github.com/golang/mock/mockgen
+	@go install github.com/golang/mock/mockgen@latest
 	@go generate ./...
 
 lint:
